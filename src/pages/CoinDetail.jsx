@@ -7,6 +7,7 @@ import { useTicker } from '../hooks/useTicker'
 import { useOrderBook } from '../hooks/useOrderBook'
 import PriceChart from '../components/PriceChart'
 import OrderBook from '../components/OrderBook'
+import { useKline } from '../hooks/useKline'
 
 const INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1d'];
 
@@ -17,6 +18,7 @@ function CoinDetail() {
     const trades = useTrades(symbol);
     const [data, setData] = useState([]);
     const [timeframe, setTimeframe] = useState('1h');
+    const liveCandle = useKline(symbol, timeframe);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -65,7 +67,7 @@ function CoinDetail() {
                 <div className="lg:col-span-2">
                     {loading && <div className="text-gray-500">Grafik yükleniyor...</div>}
                     {error && <div className="text-red-500">Hata: {error}</div>}
-                    {!loading && !error && <PriceChart data={data} />}
+                    {!loading && !error && <PriceChart data={data} liveCandle={liveCandle} />}
                 </div>
                 <div>
                     <OrderBook book={book} />

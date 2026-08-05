@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { createChart, CandlestickSeries } from 'lightweight-charts'
 
-function PriceChart({ data }) {
+function PriceChart({ data, liveCandle }) {
   const containerRef = useRef(null);
+  const seriesRef = useRef(null);
 
   useEffect(() => {
     const chart = createChart(containerRef.current, {
@@ -23,6 +24,7 @@ function PriceChart({ data }) {
 
     series.setData(data);
     chart.timeScale().fitContent();
+    seriesRef.current = series;
 
     const handleResize = () => {
       chart.applyOptions({ width: containerRef.current.clientWidth });
@@ -33,8 +35,15 @@ function PriceChart({ data }) {
     return () => {
       window.removeEventListener('resize', handleResize);
       chart.remove();
+      seriesRef.current = null;
     };
   }, [data]);
+
+  useEffect(() => {
+    if (liveCandle && seriesRef.current) {
+      seriesRef.current.update(liveCandle);
+    }
+  }, [liveCandle]);
 
   return <div ref={containerRef} className="w-full" />;
 }
