@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getCoins } from '../api/coingecko'
 
 function Markets() {
+  const navigate = useNavigate();
   const [coins, setCoins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -70,7 +72,11 @@ function Markets() {
         </thead>
         <tbody>
           {sorted.map((coin, index) => (
-            <tr key={coin.id} className="border-b border-gray-100">
+            <tr
+              key={coin.id}
+              onClick={() => navigate(`/coin/${coin.symbol.toUpperCase()}USDT`)}
+              className="border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+            >
               <td className="py-3 text-gray-400">{index + 1}</td>
               <td className="py-3 font-medium">
                 <img src={coin.image} alt="" className="inline w-5 h-5 mr-2 align-middle" />
