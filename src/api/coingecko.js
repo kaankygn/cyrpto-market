@@ -6,3 +6,16 @@ export async function getCoins() {
   if (!res.ok) throw new Error('Coin verisi alınamadı');
   return res.json();
 }
+
+export async function getTrending() {
+  const res = await fetch(`${BASE}/search/trending`);
+  if (!res.ok) throw new Error('Trend veri alınamadı');
+  const json = await res.json();
+  return json.coins;
+}
+export async function getGlobal() {
+  const res = await fetch(`${BASE}/global`);
+  if (!res.ok) throw new Error('Global veri alınamadı');
+  const json = await res.json();
+  return json.data;
+}
