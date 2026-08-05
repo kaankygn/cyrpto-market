@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Ortam değişkenleri (API anahtarları) - GitHub'a gitmemeli
+.env
+.env.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
