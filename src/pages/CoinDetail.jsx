@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { getKlines } from '../api/binance'
+import { useTicker } from '../hooks/useTicker'
 import PriceChart from '../components/PriceChart'
 
 const INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1d'];
 
 function CoinDetail() {
   const { symbol } = useParams();
+  const ticker = useTicker(symbol);
   const [data, setData] = useState([]);
   const [timeframe, setTimeframe] = useState('1h');
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,20 @@ function CoinDetail() {
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold text-emerald-600 mb-4">{symbol}</h1>
+      <div className="flex items-baseline gap-4 mb-4">
+        <h1 className="text-3xl font-bold text-emerald-600">{symbol}</h1>
+        {ticker && (
+          <>
+            <span className="text-2xl font-semibold">
+              ${ticker.price.toLocaleString()}
+            </span>
+            <span className={ticker.changePercent >= 0 ? 'text-emerald-600' : 'text-red-500'}>
+              {ticker.changePercent >= 0 ? '+' : ''}
+              {ticker.changePercent.toFixed(2)}%
+            </span>
+          </>
+        )}
+      </div>
 
       <div className="flex gap-2 mb-4">
         {INTERVALS.map((iv) => (
