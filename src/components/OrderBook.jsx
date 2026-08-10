@@ -4,7 +4,7 @@ function OrderBook({ book }) {
 
   return (
     <div className="border border-gray-200 rounded-lg p-3 text-sm">
-      <div className="font-semibold text-gray-500 mb-2">Emir Defteri</div>
+      <div className="font-semibold text-gray-500 mb-2">Order Book</div>
 
       {asks.map(([price, qty], i) => (
         <div key={i} className="flex justify-between text-red-500">

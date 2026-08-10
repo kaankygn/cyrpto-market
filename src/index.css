@@ -1,1 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0a12;
+  --color-panel: #0d0d1a;
+  --color-cyan: #00e5ff;
+  --color-magenta: #ff2bd6;
+  --color-up: #00ffa3;
+  --color-down: #ff3b6b;
+  --color-ink: #e8e8ff;
+  --color-sub: #6b6b9a;
+
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-display: 'Orbitron', sans-serif;
+}
+
+body {
+  background: #0a0a12;
+  color: #e8e8ff;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.glow-cyan { text-shadow: 0 0 8px rgba(0, 229, 255, 0.5); }
+.glow-magenta { text-shadow: 0 0 8px rgba(255, 43, 214, 0.5); }
+.panel {
+  background: #0d0d1a;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 8px;
+}
+
+/* Navbar Efekt */
+
+@keyframes sweep {
+  0% { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+@keyframes softlife {
+  0%, 92%, 100% { opacity: 1; }
+  94% { opacity: .72; }
+  96% { opacity: 1; }
+  98% { opacity: .85; }
+}
+
+/* Navbar logo blink */
+.logo-life { animation: softlife 6s infinite; }
+.nav-sweep {
+  background: linear-gradient(90deg, transparent 0%, #00e5ff 40%, #ff2bd6 60%, transparent 100%);
+  background-size: 150% 100%;
+  animation: sweep 5s ease-in-out infinite;
+}
+.logo-mark {
+  filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.35));
+  transition: transform .25s ease, filter .25s ease;
+}
+.logo-hover:hover .logo-mark {
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 13px rgba(0, 229, 255, 0.75));
+  animation: wiggle .5s ease;
+}
+.logo-wink { opacity: 0; }
+.logo-hover:hover .logo-wink { animation: wink .6s ease; }
+@keyframes wiggle {
+  0%, 100% { rotate: 0deg; }
+  30% { rotate: -7deg; }
+  70% { rotate: 7deg; }
+}
+@keyframes wink {
+  0%, 100% { opacity: 0; }
+  30%, 70% { opacity: 1; }
+}

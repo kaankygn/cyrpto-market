@@ -65,8 +65,8 @@ function CoinDetail() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2">
-                    {loading && <div className="text-gray-500">Grafik yükleniyor...</div>}
-                    {error && <div className="text-red-500">Hata: {error}</div>}
+                    {loading && <div className="text-gray-500">Loading chart...</div>}
+                    {error && <div className="text-red-500">Error: {error}</div>}
                     {!loading && !error && <PriceChart data={data} liveCandle={liveCandle} />}
                 </div>
                 <div>

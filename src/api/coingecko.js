@@ -4,7 +4,7 @@ const KEY = import.meta.env.VITE_COINGECKO_KEY;
 async function get(path) {
   const sep = path.includes('?') ? '&' : '?';
   const res = await fetch(`${BASE}${path}${sep}x_cg_demo_api_key=${KEY}`);
-  if (!res.ok) throw new Error('CoinGecko verisi alınamadı');
+  if (!res.ok) throw new Error('Failed to load data');
   return res.json();
 }
 

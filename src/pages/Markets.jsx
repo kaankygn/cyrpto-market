@@ -18,8 +18,8 @@ function Markets() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="p-8 text-gray-500">Yükleniyor...</div>;
-  if (error) return <div className="p-8 text-red-500">Hata: {error}</div>;
+  if (loading) return <div className="p-8 text-gray-500">Loading...</div>;
+  if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
 
   function handleSort(key) {
     if (sortKey === key) {
@@ -49,7 +49,7 @@ function Markets() {
 
       <input
         type="text"
-        placeholder="Coin ara... (BTC, ethereum)"
+        placeholder="Search coins... (BTC, ETH)"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="mb-4 w-full max-w-sm rounded border border-gray-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
@@ -62,11 +62,11 @@ function Markets() {
             <th className="py-2">Coin</th>
             <th className="py-2 text-right cursor-pointer select-none hover:text-emerald-600"
                 onClick={() => handleSort('current_price')}>
-              Fiyat{arrow('current_price')}
+              Price{arrow('current_price')}
             </th>
             <th className="py-2 text-right cursor-pointer select-none hover:text-emerald-600"
                 onClick={() => handleSort('price_change_percentage_24h')}>
-              24s %{arrow('price_change_percentage_24h')}
+              24h %{arrow('price_change_percentage_24h')}
             </th>
           </tr>
         </thead>
