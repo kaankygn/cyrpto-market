@@ -21,3 +21,7 @@ export async function getTrending() {
   const json = await get('/search/trending');
   return json.coins;
 }
+
+export async function getSearchCoins() {
+  return get('/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1');
+}
