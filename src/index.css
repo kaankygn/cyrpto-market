@@ -129,11 +129,27 @@ body {
 
 
 @keyframes wordGlitch {
-  0%, 100% { transform: translate(0, 0) skewX(0); }
-  15% { transform: translate(-3px, 1px) skewX(-8deg); }
-  35% { transform: translate(3px, -1px) skewX(6deg); }
-  55% { transform: translate(-2px, 0) skewX(0); }
-  75% { transform: translate(2px, 1px) skewX(-4deg); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) skewX(0);
+  }
+
+  15% {
+    transform: translate(-3px, 1px) skewX(-8deg);
+  }
+
+  35% {
+    transform: translate(3px, -1px) skewX(6deg);
+  }
+
+  55% {
+    transform: translate(-2px, 0) skewX(0);
+  }
+
+  75% {
+    transform: translate(2px, 1px) skewX(-4deg);
+  }
 }
 
 /* Navbar logo blink */
@@ -392,19 +408,47 @@ body {
 
 
 /* Cyberpunk scrollbar (tüm sayfa + balon) */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #0a0a12; }
-::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.25); border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(0, 229, 255, 0.45); }
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
 
-html { scrollbar-color: rgba(0, 229, 255, 0.3) #0a0a12; scrollbar-width: thin; }
+::-webkit-scrollbar-track {
+  background: #0a0a12;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.25);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 255, 0.45);
+}
+
+html {
+  scrollbar-color: rgba(0, 229, 255, 0.3) #0a0a12;
+  scrollbar-width: thin;
+}
 
 
-.ticker-track { animation: tickerScroll 40s linear infinite; will-change: transform; }
-.ticker-bar:hover .ticker-track { animation-play-state: paused; }
+.ticker-track {
+  animation: tickerScroll 40s linear infinite;
+  will-change: transform;
+}
+
+.ticker-bar:hover .ticker-track {
+  animation-play-state: paused;
+}
+
 @keyframes tickerScroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 
@@ -421,10 +465,113 @@ body {
 }
 
 
-.cyber-card { position: relative; transition: box-shadow .25s ease, transform .25s ease; }
-.cyber-card:hover { box-shadow: 0 0 18px rgba(0, 229, 255, 0.12); transform: translateY(-2px); }
-.cyber-card::before, .cyber-card::after {
-  content: ''; position: absolute; width: 9px; height: 9px; pointer-events: none;
+.cyber-card {
+  position: relative;
+  transition: box-shadow .25s ease, transform .25s ease;
 }
-.cyber-card::before { top: -1px; left: -1px; border-top: 2px solid #00e5ff; border-left: 2px solid #00e5ff; }
-.cyber-card::after { bottom: -1px; right: -1px; border-bottom: 2px solid #00e5ff; border-right: 2px solid #00e5ff; }
+
+.cyber-card:hover {
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.cyber-card::before,
+.cyber-card::after {
+  content: '';
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+}
+
+.cyber-card::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid #00e5ff;
+  border-left: 2px solid #00e5ff;
+}
+
+.cyber-card::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid #00e5ff;
+  border-right: 2px solid #00e5ff;
+}
+
+.ticker-bar {
+  scrollbar-width: none;
+}
+
+.ticker-bar::-webkit-scrollbar {
+  display: none;
+}
+
+
+.flash-up {
+  animation: flashUp 1.2s ease;
+}
+
+.flash-down {
+  animation: flashDown 1.2s ease;
+}
+
+@keyframes flashUp {
+  0% {
+    background: rgba(0, 255, 163, 0.18);
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes flashDown {
+  0% {
+    background: rgba(255, 59, 107, 0.18);
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+.loading-portal {
+  border-radius: 50%;
+  border: 2px solid #00e5ff;
+  background: radial-gradient(ellipse at center, #05050a 42%, rgba(0, 229, 255, 0.28) 74%, transparent 100%);
+  box-shadow: 0 0 40px #00e5ff, inset 0 0 30px rgba(0, 229, 255, .6);
+  animation: portalPulse 2s ease-in-out infinite;
+}
+
+@keyframes portalPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 30px #00e5ff, inset 0 0 24px rgba(0, 229, 255, .5);
+  }
+
+  50% {
+    box-shadow: 0 0 55px #00e5ff, inset 0 0 34px rgba(0, 229, 255, .78);
+  }
+}
+
+.loading-coin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #ffd54a;
+  color: #ffd54a;
+  font-weight: bold;
+  box-shadow: 0 0 14px #ffd54a;
+}
+
+.loading-suck { transform-origin: bottom center; animation: rhSuck 2.4s ease-in-out infinite; }
+@keyframes rhSuck {
+  0%   { transform: translateX(-50%) translateY(-70px) scale(1); opacity: 0; }
+  20%  { transform: translateX(-50%) translateY(-70px) scale(1); opacity: 1; }
+  58%  { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(0) scale(0); opacity: 0; }
+}

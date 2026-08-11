@@ -5,6 +5,7 @@ import { getFearGreed } from '../api/fng'
 import FearGreedMascot from '../components/FearGreedMascot'
 import Sparkline from '../components/Sparkline'
 import CountUp from '../components/CountUp'
+import Loading from '../components/Loading'
 
 const ic = 'h-5 w-5 text-sub shrink-0';
 const IconGlobe = () => (<svg className={ic} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18" /></svg>);
@@ -23,10 +24,14 @@ function Dashboard() {
   const [clock, setClock] = useState('');
 
   useEffect(() => {
+    const started = Date.now();
     Promise.all([getGlobal(), getTrending(), getCoins(), getFearGreed().catch(() => null)])
       .then(([g, t, c, f]) => { setStats(g); setTrending(t); setCoins(c); setFng(f); })
       .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        const wait = Math.max(0, 2300 - (Date.now() - started));
+        setTimeout(() => setLoading(false), wait);
+      });
   }, []);
 
   useEffect(() => {
@@ -36,7 +41,7 @@ function Dashboard() {
     return () => clearInterval(id);
   }, []);
 
-  if (loading) return <div className="p-8 text-sub">Loading...</div>;
+  if (loading) return <Loading />;
   if (error) return <div className="p-8 text-down">Error: {error}</div>;
 
   const fmtUsd = (n) => '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
