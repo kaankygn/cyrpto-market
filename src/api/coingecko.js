@@ -9,7 +9,7 @@ async function get(path) {
 }
 
 export async function getCoins() {
-  return get('/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1');
+  return get('/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true');
 }
 
 export async function getGlobal() {

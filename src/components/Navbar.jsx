@@ -53,7 +53,7 @@ function Navbar() {
       <div className="nav-scanlines pointer-events-none absolute inset-0"></div>
       <NavLink to="/"><Logo glitch={glitch} /></NavLink>
 
-      <NavLink to="/" end className={linkClass}>Dashboard</NavLink>
+      <NavLink to="/" end className={linkClass}>Terminal</NavLink>
       <NavLink to="/markets" className={linkClass}>Markets</NavLink>
 
       <div className="ml-auto flex items-center gap-4">
