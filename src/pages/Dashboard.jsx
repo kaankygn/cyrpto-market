@@ -6,6 +6,7 @@ import FearGreedMascot from '../components/FearGreedMascot'
 import Sparkline from '../components/Sparkline'
 import CountUp from '../components/CountUp'
 import Loading from '../components/Loading'
+import ErrorState from '../components/ErrorState'
 
 const ic = 'h-5 w-5 text-sub shrink-0';
 const IconGlobe = () => (<svg className={ic} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18" /></svg>);
@@ -42,7 +43,7 @@ function Dashboard() {
   }, []);
 
   if (loading) return <Loading />;
-  if (error) return <div className="p-8 text-down">Error: {error}</div>;
+  if (error) return <ErrorState message={error} />;
 
   const fmtUsd = (n) => '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
   const fmtPrice = (n) => '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: n < 1 ? 6 : 2 });
