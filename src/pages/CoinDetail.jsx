@@ -3,6 +3,7 @@ import TradeList from '../components/TradeList'
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { getKlines, getBinanceSymbols } from '../api/binance'
+import { getCoinBySymbol, getCoinOHLC } from '../api/coingecko'
 import { useTicker } from '../hooks/useTicker'
 import { useOrderBook } from '../hooks/useOrderBook'
 import PriceChart from '../components/PriceChart'
@@ -23,6 +24,11 @@ function CoinDetail() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [supported, setSupported] = useState(null); // null=bilinmiyor, true/false
+    const [meta, setMeta] = useState(null);
+    const [fbData, setFbData] = useState([]);
+    const [fbDays, setFbDays] = useState(7);
+    const [fbLoading, setFbLoading] = useState(false);
+    const [fbError, setFbError] = useState(false);
     const [reloadKey, setReloadKey] = useState(0);
     const retry = () => setReloadKey((k) => k + 1);
 
@@ -35,6 +41,23 @@ function CoinDetail() {
         });
         return () => { active = false; };
     }, [symbol]);
+
+    useEffect(() => {
+        let active = true;
+        setMeta(null);
+        getCoinBySymbol(symbol.replace('USDT', '')).then((m) => { if (active) setMeta(m); }).catch(() => { });
+        return () => { active = false; };
+    }, [symbol]);
+
+    useEffect(() => {
+        if (supported !== false || !meta?.id) return;
+        let active = true;
+        setFbLoading(true); setFbError(false);
+        getCoinOHLC(meta.id, fbDays)
+            .then((c) => { if (active) { setFbData(c); setFbLoading(false); } })
+            .catch(() => { if (active) { setFbError(true); setFbLoading(false); } });
+        return () => { active = false; };
+    }, [supported, meta, fbDays]);
 
     useEffect(() => {
         if (supported === null) return;
@@ -61,50 +84,90 @@ function CoinDetail() {
         return () => { cancelled = true; controller.abort(); clearTimeout(timer); };
     }, [symbol, timeframe, reloadKey, supported]);
 
+
     return (
         <div className="p-4 md:p-8">
-            <div className="mb-4 flex flex-wrap items-baseline gap-4">
-                <h1 className="font-display text-3xl font-bold text-cyan glow-cyan">
-                    {symbol.replace('USDT', '')}<span className="text-lg text-sub">/USDT</span>
-                </h1>
-                {ticker && (
+            <div className="mb-4 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-3">
+                    {meta?.image && <img src={meta.image} alt="" className="h-9 w-9" />}
+                    <h1 className="font-display text-3xl font-bold text-cyan glow-cyan">
+                        {symbol.replace('USDT', '')}<span className="text-lg text-sub">/USDT</span>
+                    </h1>
+                    {meta?.name && <span className="text-sm text-sub">{meta.name}</span>}
+                </div>
+                {ticker ? (
                     <>
                         <span className="text-2xl font-semibold tabular-nums text-ink">${ticker.price.toLocaleString()}</span>
                         <span className={`tabular-nums ${ticker.changePercent >= 0 ? 'text-up' : 'text-down'}`}>
                             {ticker.changePercent >= 0 ? '▲' : '▼'}{Math.abs(ticker.changePercent).toFixed(2)}%
                         </span>
                     </>
+                ) : supported === false && meta ? (
+                    <span className="text-2xl font-semibold tabular-nums text-ink">${meta.current_price?.toLocaleString()}</span>
+                ) : null}
+                {supported === false && (
+                    <span className="rounded border border-magenta/40 px-2 py-0.5 text-xs text-magenta">CoinGecko</span>
                 )}
             </div>
 
-            <div className="mb-4 flex gap-2">
-                {INTERVALS.map((iv) => (
-                    <button key={iv} onClick={() => setTimeframe(iv)}
-                        className={`rounded border px-3 py-1 text-sm transition ${timeframe === iv ? 'border-cyan/50 bg-cyan/20 text-cyan' : 'border-cyan/20 text-sub hover:text-cyan'}`}>
-                        {iv}
-                    </button>
-                ))}
-            </div>
+            {supported !== false ? (
+                <div className="mb-4 flex gap-2">
+                    {INTERVALS.map((iv) => (
+                        <button key={iv} onClick={() => setTimeframe(iv)}
+                            className={`rounded border px-3 py-1 text-sm transition ${timeframe === iv ? 'border-cyan/50 bg-cyan/20 text-cyan' : 'border-cyan/20 text-sub hover:text-cyan'}`}>
+                            {iv}
+                        </button>
+                    ))}
+                </div>
+            ) : meta?.id ? (
+                <div className="mb-4 flex gap-2">
+                    {[[1, '1D'], [7, '7D'], [30, '1M']].map(([d, label]) => (
+                        <button key={d} onClick={() => setFbDays(d)}
+                            className={`rounded border px-3 py-1 text-sm transition ${fbDays === d ? 'border-cyan/50 bg-cyan/20 text-cyan' : 'border-cyan/20 text-sub hover:text-cyan'}`}>
+                            {label}
+                        </button>
+                    ))}
+                </div>
+            ) : null}
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <div className="lg:col-span-2 self-start">
                     <div className="cyber-card rounded-lg border border-cyan/20 bg-panel p-2">
-                        {loading && <div className="p-6 text-sub">Loading chart...</div>}
-                        {error === 'unsupported' && (
-                            <div className="p-6 text-sub">Bu varlık Binance'te listelenmemiş — canlı grafik yok.</div>
+                        {supported === false ? (
+                            !meta?.id ? (
+                                <div className="p-6 text-sub">Not listed on Binance — no chart data available.</div>
+                            ) : fbLoading ? (
+                                <div className="p-6 text-sub">Loading chart...</div>
+                            ) : fbError ? (
+                                <div className="p-6 text-down">Failed to load chart.</div>
+                            ) : (
+                                <PriceChart data={fbData} />
+                            )
+                        ) : (
+                            <>
+                                {loading && <div className="p-6 text-sub">Loading chart...</div>}
+                                {error === 'fetch' && (
+                                    <div className="p-6 text-down">
+                                        Failed to load chart.
+                                        <button onClick={retry} className="ml-2 rounded border border-cyan/40 px-2 py-0.5 text-cyan hover:bg-cyan/10">Retry</button>
+                                    </div>
+                                )}
+                                {!loading && !error && <PriceChart data={data} liveCandle={liveCandle} />}
+                            </>
                         )}
-                        {error === 'fetch' && (
-                            <div className="p-6 text-down">
-                                Grafik yüklenemedi.
-                                <button onClick={retry} className="ml-2 rounded border border-cyan/40 px-2 py-0.5 text-cyan hover:bg-cyan/10">Tekrar dene</button>
-                            </div>
-                        )}
-                        {!loading && !error && <PriceChart data={data} liveCandle={liveCandle} />}
                     </div>
                 </div>
                 <div className="self-start">
-                    <OrderBook book={book} />
-                    <TradeList trades={trades} />
+                    {supported === false ? (
+                        <div className="cyber-card rounded-lg border border-cyan/20 bg-panel p-4 text-sm text-sub">
+                            Order book & trades unavailable (not on Binance).
+                        </div>
+                    ) : (
+                        <>
+                            <OrderBook book={book} />
+                            <TradeList trades={trades} />
+                        </>
+                    )}
                 </div>
             </div>
         </div>

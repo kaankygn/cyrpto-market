@@ -26,3 +26,20 @@ export async function getSearchCoins() {
   return get('/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1');
 }
 
+let marketsCache = null;
+function getMarketsList() {
+  if (!marketsCache) marketsCache = getSearchCoins();
+  return marketsCache;
+}
+
+export async function getCoinBySymbol(sym) {
+  const list = await getMarketsList();
+  const s = sym.toLowerCase();
+  return list.find((c) => c.symbol.toLowerCase() === s) || null;
+}
+
+export async function getCoinOHLC(id, days = 7) {
+  const raw = await get(`/coins/${id}/ohlc?vs_currency=usd&days=${days}`);
+  return raw.map((k) => ({ time: k[0] / 1000, open: k[1], high: k[2], low: k[3], close: k[4] }));
+}
+
