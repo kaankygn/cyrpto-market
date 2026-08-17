@@ -9,7 +9,7 @@ async function get(path) {
 }
 
 export async function getCoins() {
-  return get('/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true');
+  return get('/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true&price_change_percentage=24h,7d');
 }
 
 export async function getGlobal() {
@@ -25,3 +25,4 @@ export async function getTrending() {
 export async function getSearchCoins() {
   return get('/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1');
 }
+

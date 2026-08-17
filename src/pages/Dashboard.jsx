@@ -13,6 +13,7 @@ const IconGlobe = () => (<svg className={ic} viewBox="0 0 24 24" fill="none" str
 const IconBtc = () => (<svg className={ic} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="9" /><path d="M9.5 8h4a2 2 0 010 4h-4m0 0h4.3a2 2 0 010 4H9.5m0-8v8m1.5-9v1m0 8v1" /></svg>);
 const IconBars = () => (<svg className={ic} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M4 20V11M10 20V4M16 20v-6M2 20h19" /></svg>);
 const IconCoins = () => (<svg className={ic} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><ellipse cx="12" cy="6" rx="7" ry="3" /><path d="M5 6v6c0 1.7 3 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3 3 7 3s7-1.3 7-3v-6" /></svg>);
+const IconRefresh = () => (<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" /></svg>);
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -23,17 +24,28 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [clock, setClock] = useState('');
+  const [range, setRange] = useState('24h');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchAll = () =>
+    Promise.all([getGlobal(), getTrending(), getCoins(), getFearGreed().catch(() => null)])
+      .then(([g, t, c, f]) => { setStats(g); setTrending(t); setCoins(c); setFng(f); });
 
   useEffect(() => {
     const started = Date.now();
-    Promise.all([getGlobal(), getTrending(), getCoins(), getFearGreed().catch(() => null)])
-      .then(([g, t, c, f]) => { setStats(g); setTrending(t); setCoins(c); setFng(f); })
+    fetchAll()
       .catch((err) => setError(err.message))
       .finally(() => {
         const wait = Math.max(0, 2300 - (Date.now() - started));
         setTimeout(() => setLoading(false), wait);
       });
   }, []);
+
+  const refresh = () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    fetchAll().catch((err) => setError(err.message)).finally(() => setRefreshing(false));
+  };
 
   useEffect(() => {
     const tick = () => setClock(new Date().toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: false }));
@@ -56,8 +68,10 @@ function Dashboard() {
   };
 
   const mcChange = stats.market_cap_change_percentage_24h_usd ?? 0;
-  const gainers = [...coins].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 8);
-  const losers = [...coins].sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0, 8);
+  const chg = (c) => (range === '7d' ? c.price_change_percentage_7d_in_currency : c.price_change_percentage_24h) ?? 0;
+  const spData = (c) => { const p = c.sparkline_in_7d?.price; return range === '7d' ? p : p?.slice(-24); };
+  const gainers = [...coins].sort((a, b) => chg(b) - chg(a)).slice(0, 8);
+  const losers = [...coins].sort((a, b) => chg(a) - chg(b)).slice(0, 8);
   const hero = ['btc', 'eth'].map((s) => coins.find((c) => c.symbol.toLowerCase() === s)).filter(Boolean);
   const fngColor = !fng ? 'text-sub' : fng.value <= 45 ? 'text-down' : fng.value <= 54 ? 'text-sub' : 'text-up';
 
@@ -68,42 +82,75 @@ function Dashboard() {
     { label: 'Active coins', num: stats.active_cryptocurrencies, fmt: (n) => Math.round(n).toLocaleString(), icon: <IconCoins /> },
   ];
 
-  const MoverRow = ({ c }) => (
-    <div onClick={() => goTo(c.symbol)} className="flex cursor-pointer items-center gap-2 px-3 py-2 transition-colors hover:bg-cyan/5">
+  const SectionHeader = ({ title, color = 'cyan', right }) => {
+    const c = { cyan: '#00e5ff', magenta: '#ff2bd6', up: '#00ffa3', down: '#ff3b6b' }[color];
+    return (
+      <div className="mb-3 flex items-center gap-3">
+        <span className="h-4 w-1 rounded-full" style={{ background: c, boxShadow: `0 0 8px ${c}` }} />
+        <h2 className="font-display text-sm font-bold uppercase tracking-[0.2em]" style={{ color: c, textShadow: `0 0 8px ${c}66` }}>
+          {title}
+        </h2>
+        <span className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${c}55, transparent)` }} />
+        {right}
+      </div>
+    );
+  };
+
+  const MoverRow = ({ c, i }) => (
+    <div onClick={() => goTo(c.symbol)}
+      className="flex cursor-pointer items-center gap-2 border-l-2 border-transparent px-3 py-2 transition-colors hover:border-cyan hover:bg-cyan/5">
+      <span className="w-4 text-xs tabular-nums text-sub">{i + 1}</span>
       <img src={c.image} alt="" className="h-5 w-5" />
       <span className="font-medium text-ink">{c.symbol.toUpperCase()}</span>
-      <span className="ml-auto"><Sparkline data={c.sparkline_in_7d?.price} color={spColor(c.price_change_percentage_24h)} width={56} height={18} /></span>
+      <span className="ml-auto"><Sparkline data={spData(c)} color={spColor(chg(c))} width={56} height={18} /></span>
       <span className="w-24 text-right text-sm tabular-nums text-sub">{fmtPrice(c.current_price)}</span>
-      <span className="w-16 text-right text-sm tabular-nums">{pct(c.price_change_percentage_24h)}</span>
+      <span className="w-16 text-right text-sm tabular-nums">{pct(chg(c))}</span>
     </div>
   );
 
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <div className="flex items-center gap-3">
-          <h1 className="font-display text-3xl font-bold text-cyan glow-cyan">Market Overview</h1>
-          <span className="flex items-center gap-1.5 text-xs text-up">
-            <span className="h-2 w-2 rounded-full bg-up animate-pulse"></span>LIVE
-          </span>
+    <div className="p-4 md:p-8">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-3xl font-bold text-cyan glow-cyan">Market Overview</h1>
+            <span className="flex items-center gap-1.5 text-xs text-up">
+              <span className="h-2 w-2 rounded-full bg-up animate-pulse"></span>LIVE
+            </span>
+          </div>
+          <div className="mt-1 text-xs text-sub">last update · {clock} UTC</div>
         </div>
-        <div className="mt-1 text-xs text-sub">last update · {clock} UTC</div>
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="flex overflow-hidden rounded border border-cyan/20 text-xs">
+            {['24h', '7d'].map((r) => (
+              <button key={r} onClick={() => setRange(r)}
+                className={`px-3 py-1.5 ${range === r ? 'bg-cyan/20 text-cyan' : 'text-sub hover:text-cyan'}`}>
+                {r}
+              </button>
+            ))}
+          </div>
+          <button onClick={refresh} title="Refresh data" disabled={refreshing}
+            className="flex items-center gap-1.5 rounded border border-cyan/20 px-3 py-1.5 text-xs text-sub transition hover:border-cyan/50 hover:text-cyan active:scale-90 active:bg-cyan/10 disabled:opacity-60">
+            <span className={refreshing ? 'inline-flex animate-spin' : 'inline-flex'}><IconRefresh /></span>
+            <span className="hidden sm:inline">{refreshing ? 'Syncing' : 'Refresh'}</span>
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         {hero.map((c) => (
           <div key={c.id} onClick={() => goTo(c.symbol)}
-            style={{ boxShadow: `0 0 45px ${c.price_change_percentage_24h >= 0 ? 'rgba(0,255,163,0.35)' : 'rgba(255,59,107,0.35)'}` }}
+            style={{ boxShadow: `0 0 45px ${chg(c) >= 0 ? 'rgba(0,255,163,0.35)' : 'rgba(255,59,107,0.35)'}` }}
             className="cyber-card flex cursor-pointer items-center gap-4 rounded-lg border border-cyan/20 bg-panel p-4">
             <img src={c.image} alt="" className="h-10 w-10" />
             <div>
               <div className="text-sm uppercase text-sub">{c.symbol} <span className="normal-case text-ink">{c.name}</span></div>
               <div className="text-2xl font-bold tabular-nums text-ink">${c.current_price.toLocaleString()}</div>
-              <div className={`text-sm ${c.price_change_percentage_24h >= 0 ? 'text-up' : 'text-down'}`}>
-                {c.price_change_percentage_24h >= 0 ? '+' : ''}{c.price_change_percentage_24h.toFixed(2)}%
+              <div className={`text-sm ${chg(c) >= 0 ? 'text-up' : 'text-down'}`}>
+                {chg(c) >= 0 ? '+' : ''}{chg(c).toFixed(2)}% <span className="text-sub">{range}</span>
               </div>
             </div>
-            <div className="ml-auto"><Sparkline data={c.sparkline_in_7d?.price} color={spColor(c.price_change_percentage_24h)} /></div>
+            <div className="ml-auto"><Sparkline data={spData(c)} color={spColor(chg(c))} /></div>
           </div>
         ))}
       </div>
@@ -139,17 +186,17 @@ function Dashboard() {
         </div>
 
         <div className="cyber-card rounded-lg border border-cyan/20 bg-panel py-2">
-          <div className="px-3 pb-2 font-display text-sm font-bold text-up">Top Gainers</div>
-          {gainers.map((c) => <MoverRow key={c.id} c={c} />)}
+          <div className="px-3 pt-1"><SectionHeader title="Top Gainers" color="up" /></div>
+          {gainers.map((c, i) => <MoverRow key={c.id} c={c} i={i} />)}
         </div>
 
         <div className="cyber-card rounded-lg border border-cyan/20 bg-panel py-2">
-          <div className="px-3 pb-2 font-display text-sm font-bold text-down">Top Losers</div>
-          {losers.map((c) => <MoverRow key={c.id} c={c} />)}
+          <div className="px-3 pt-1"><SectionHeader title="Top Losers" color="down" /></div>
+          {losers.map((c, i) => <MoverRow key={c.id} c={c} i={i} />)}
         </div>
       </div>
 
-      <h2 className="mb-3 font-display text-lg font-bold text-magenta glow-magenta">Trending</h2>
+      <SectionHeader title="Trending" color="magenta" />
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {trending.map(({ item }) => (
           <div key={item.id} onClick={() => goTo(item.symbol)}
