@@ -7,19 +7,19 @@ function PriceChart({ data, liveCandle }) {
 
   useEffect(() => {
     const chart = createChart(containerRef.current, {
-      height: 400,
-      layout: { background: { color: '#ffffff' }, textColor: '#333333' },
-      grid: { vertLines: { color: '#f0f0f0' }, horzLines: { color: '#f0f0f0' } },
-      timeScale: { timeVisible: true, borderColor: '#e0e0e0' },
-      rightPriceScale: { borderColor: '#e0e0e0' },
+      height: 500,
+      layout: { background: { color: '#0d0d1a' }, textColor: '#6b6b9a' },
+      grid: { vertLines: { color: 'rgba(0,229,255,0.06)' }, horzLines: { color: 'rgba(0,229,255,0.06)' } },
+      timeScale: { timeVisible: true, borderColor: 'rgba(0,229,255,0.2)' },
+      rightPriceScale: { borderColor: 'rgba(0,229,255,0.2)' },
     });
 
     const series = chart.addSeries(CandlestickSeries, {
-      upColor: '#1D9E75',
-      downColor: '#E24B4A',
+      upColor: '#00ffa3',
+      downColor: '#ff3b6b',
       borderVisible: false,
-      wickUpColor: '#1D9E75',
-      wickDownColor: '#E24B4A',
+      wickUpColor: '#00ffa3',
+      wickDownColor: '#ff3b6b',
     });
 
     series.setData(data);
