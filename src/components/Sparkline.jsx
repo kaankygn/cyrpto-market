@@ -1,4 +1,4 @@
-function Sparkline({ data, color, width = 140, height = 44 }) {
+function Sparkline({ data, color, width = 140, height = 44, className = '' }) {
   if (!data || !data.length) return null;
   const min = Math.min(...data);
   const max = Math.max(...data);
@@ -9,7 +9,7 @@ function Sparkline({ data, color, width = 140, height = 44 }) {
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(' ');
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+    <svg className={className} width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
       <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" />
     </svg>
   );
