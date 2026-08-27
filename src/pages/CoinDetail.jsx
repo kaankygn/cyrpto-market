@@ -11,7 +11,7 @@ import OrderBook from '../components/OrderBook'
 import { useKline } from '../hooks/useKline'
 import { analyzeCandles } from '../lib/analysis'
 import AnalysisPanel from '../components/AnalysisPanel'
-
+import ChatBox from '../components/ChatBox'
 
 const INTERVALS = ['15m', '1h', '4h', '1d', '1w', '1M'];
 
@@ -36,6 +36,8 @@ function CoinDetail() {
     const [llmLoading, setLlmLoading] = useState(false);
     const [llmError, setLlmError] = useState(null);
     const [mode, setMode] = useState('detailed');
+    const [chat, setChat] = useState([]);
+    const [chatLoading, setChatLoading] = useState(false);
     const [reloadKey, setReloadKey] = useState(0);
     const retry = () => setReloadKey((k) => k + 1);
 
@@ -66,7 +68,7 @@ function CoinDetail() {
         return () => { active = false; };
     }, [supported, meta, fbDays]);
 
-    useEffect(() => { setAnalysis(null); setLlm(null); setLlmError(null); }, [symbol, timeframe, fbDays]);
+    useEffect(() => { setAnalysis(null); setLlm(null); setLlmError(null); setChat([]); }, [symbol, timeframe, fbDays]);
     const canAnalyze = supported === false ? fbData.length > 0 : data.length > 0;
     const runAnalysis = async () => {
         const a = analyzeCandles(supported === false ? fbData : data);
@@ -88,6 +90,27 @@ function CoinDetail() {
             setLlmError('AI analysis unavailable.');
         } finally {
             setLlmLoading(false);
+        }
+    };
+
+    const sendChat = async (text) => {
+        const next = [...chat, { role: 'user', text }];
+        setChat(next);
+        setChatLoading(true);
+        try {
+            const base = import.meta.env.VITE_API_BASE || '';
+            const res = await fetch(`${base}/api/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ symbol, rangeLabel: supported === false ? `${fbDays}D` : timeframe, indicators: analysis, messages: next }),
+            });
+            const j = await res.json();
+            if (!res.ok || j.error) throw new Error(j.error || 'failed');
+            setChat([...next, { role: 'assistant', text: j.reply }]);
+        } catch {
+            setChat([...next, { role: 'assistant', text: 'AI is busy — please try again.' }]);
+        } finally {
+            setChatLoading(false);
         }
     };
 
@@ -217,6 +240,7 @@ function CoinDetail() {
                 </div>
             </div>
             <AnalysisPanel analysis={analysis} rangeLabel={supported === false ? `${fbDays}D` : timeframe} llm={llm} llmLoading={llmLoading} llmError={llmError} />
+            {analysis && <ChatBox messages={chat} onSend={sendChat} loading={chatLoading} />}
         </div>
     );
 }
