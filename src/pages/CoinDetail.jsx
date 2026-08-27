@@ -32,6 +32,9 @@ function CoinDetail() {
     const [fbLoading, setFbLoading] = useState(false);
     const [fbError, setFbError] = useState(false);
     const [analysis, setAnalysis] = useState(null);
+    const [llm, setLlm] = useState(null);
+    const [llmLoading, setLlmLoading] = useState(false);
+    const [llmError, setLlmError] = useState(null);
     const [reloadKey, setReloadKey] = useState(0);
     const retry = () => setReloadKey((k) => k + 1);
 
@@ -62,9 +65,30 @@ function CoinDetail() {
         return () => { active = false; };
     }, [supported, meta, fbDays]);
 
-    useEffect(() => { setAnalysis(null); }, [symbol, timeframe, fbDays]);
+    useEffect(() => { setAnalysis(null); setLlm(null); setLlmError(null); }, [symbol, timeframe, fbDays]);
     const canAnalyze = supported === false ? fbData.length > 0 : data.length > 0;
-    const runAnalysis = () => setAnalysis(analyzeCandles(supported === false ? fbData : data));
+    const runAnalysis = async () => {
+        const a = analyzeCandles(supported === false ? fbData : data);
+        setAnalysis(a);
+        setLlm(null); setLlmError(null);
+        if (!a) return;
+        setLlmLoading(true);
+        try {
+            const base = import.meta.env.VITE_API_BASE || '';
+            const res = await fetch(`${base}/api/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ symbol, rangeLabel: supported === false ? `${fbDays}D` : timeframe, indicators: a }),
+            });
+            const j = await res.json();
+            if (!res.ok || j.error) throw new Error(j.error || 'failed');
+            setLlm(j);
+        } catch {
+            setLlmError('AI analysis unavailable.');
+        } finally {
+            setLlmLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (supported === null) return;
@@ -183,7 +207,7 @@ function CoinDetail() {
                     )}
                 </div>
             </div>
-            <AnalysisPanel analysis={analysis} rangeLabel={supported === false ? `${fbDays}D` : timeframe} />
+            <AnalysisPanel analysis={analysis} rangeLabel={supported === false ? `${fbDays}D` : timeframe} llm={llm} llmLoading={llmLoading} llmError={llmError} />
         </div>
     );
 }

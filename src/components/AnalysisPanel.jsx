@@ -1,4 +1,4 @@
-function AnalysisPanel({ analysis, rangeLabel }) {
+function AnalysisPanel({ analysis, rangeLabel, llm, llmLoading, llmError }) {
     if (!analysis) return null;
     const { bias, confidence, signals, anomalies, from, to, bars } = analysis;
     const fmtD = (t) => new Date(t * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -51,9 +51,26 @@ function AnalysisPanel({ analysis, rangeLabel }) {
                 </div>
             )}
 
-            <div className="rounded border border-cyan/15 bg-bg/40 p-3 text-xs text-sub">
-                <span className="text-ink">Outlook:</span> signals lean <span className={biasColor}>{bias}</span> for the near term (confidence {pct}%).
-                Rule-based, data-driven signal summary — <span className="text-sub">not financial advice.</span>
+            <div className="rounded border border-magenta/20 bg-bg/40 p-3">
+                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-magenta">
+                    ⚡ AI Analysis <span className="text-[10px] font-normal text-sub">· Gemini</span>
+                </div>
+                {llmLoading && <div className="text-sm text-sub">AI analyzing…</div>}
+                {llmError && <div className="text-sm text-down">{llmError}</div>}
+                {llm && (
+                    <div className="space-y-2 text-sm text-ink">
+                        <p>{llm.analysis}</p>
+                        {llm.keyPoints?.length > 0 && (
+                            <ul className="space-y-1">
+                                {llm.keyPoints.map((k, i) => (
+                                    <li key={i} className="flex gap-2 text-sub"><span className="text-cyan">▹</span>{k}</li>
+                                ))}
+                            </ul>
+                        )}
+                        {llm.outlook && <p className="text-sub"><span className="text-ink">Outlook: </span>{llm.outlook}</p>}
+                    </div>
+                )}
+                <div className="mt-2 text-[11px] text-sub">Rule-based indicators + AI narrative — not financial advice.</div>
             </div>
         </div>
     );
