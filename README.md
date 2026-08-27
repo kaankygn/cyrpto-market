@@ -49,7 +49,7 @@ CoinPunk is a single-page React application that turns free public market data i
 - Robust data layer: request cancellation (`AbortController`), retry-on-transient-error, and clear error states
 - **Binance coverage detection** — coins that aren't on Binance gracefully fall back to a **CoinGecko** chart instead of showing a broken error
 
-**⚡ AI Signal Analysis** — the flagship. See the architecture below.
+**⚡ AI Signal Analysis** — the flagship: an explainable, grounded analysis *plus* a follow-up chat. See the architecture below.
 
 **Design & UX** — Custom cyberpunk theme (neon cyan/magenta, glitch effects, a Matrix "rabbit hole" loading screen, an animated mascot), full responsive/mobile layout, keyboard focus rings, and `prefers-reduced-motion` support.
 
@@ -70,6 +70,7 @@ flowchart LR
 
 1. **A — Rule-based engine** (`src/lib/analysis.js`): pure functions turn the loaded candles into interpretable indicators (trend, RSI, volatility, volume ratio, range position, anomaly z-scores) plus a transparent **bias** and **confidence** score. This is genuinely explainable — every conclusion traces back to a number.
 2. **B — LLM narrator** (`api/analyze.js`): those indicators are sent to **Google Gemini** through a secure Vercel serverless function. The prompt instructs the model to reason **only** from the provided numbers, then produce a plain-English analysis, a hedged outlook, and key points. Supports **Simple / Detailed** modes.
+3. **Ask the Analyst** (`api/chat.js`): a follow-up chat grounded in the same indicators — ask *"why is RSI neutral?"* or *"what does the volume mean?"* and get context-aware answers. It replies in the user's language and politely declines explicit buy/sell calls.
 
 The API key never touches the browser — it lives as a server-side environment variable, and the function adds retry + a fallback model for transient overloads. The panel shows both the raw indicators *and* the AI narrative side by side.
 
@@ -132,7 +133,8 @@ npm run preview
 
 ```
 api/
-  analyze.js          # Vercel serverless function → Gemini (grounded AI)
+  analyze.js          # Serverless: indicators → Gemini analysis
+  chat.js             # Serverless: grounded follow-up chat
 src/
   api/                # REST clients (Binance, CoinGecko, Fear & Greed)
   hooks/              # WebSocket hooks (ticker, kline, order book, trades, live prices)
