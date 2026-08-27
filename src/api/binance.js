@@ -13,6 +13,7 @@ export async function getKlines(symbol, interval = '1h', limit = 200, signal) {
     high: parseFloat(k[2]),
     low: parseFloat(k[3]),
     close: parseFloat(k[4]),
+    volume: parseFloat(k[5]),
   }));
 }
 
@@ -26,3 +27,4 @@ export function getBinanceSymbols() {
   }
   return symbolsPromise;
 }
+

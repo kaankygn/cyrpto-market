@@ -9,9 +9,11 @@ import { useOrderBook } from '../hooks/useOrderBook'
 import PriceChart from '../components/PriceChart'
 import OrderBook from '../components/OrderBook'
 import { useKline } from '../hooks/useKline'
+import { analyzeCandles } from '../lib/analysis'
+import AnalysisPanel from '../components/AnalysisPanel'
 
 
-const INTERVALS = ['1m', '5m', '15m', '1h', '4h', '1d'];
+const INTERVALS = ['15m', '1h', '4h', '1d', '1w', '1M'];
 
 function CoinDetail() {
     const { symbol } = useParams();
@@ -29,6 +31,7 @@ function CoinDetail() {
     const [fbDays, setFbDays] = useState(7);
     const [fbLoading, setFbLoading] = useState(false);
     const [fbError, setFbError] = useState(false);
+    const [analysis, setAnalysis] = useState(null);
     const [reloadKey, setReloadKey] = useState(0);
     const retry = () => setReloadKey((k) => k + 1);
 
@@ -58,6 +61,10 @@ function CoinDetail() {
             .catch(() => { if (active) { setFbError(true); setFbLoading(false); } });
         return () => { active = false; };
     }, [supported, meta, fbDays]);
+
+    useEffect(() => { setAnalysis(null); }, [symbol, timeframe, fbDays]);
+    const canAnalyze = supported === false ? fbData.length > 0 : data.length > 0;
+    const runAnalysis = () => setAnalysis(analyzeCandles(supported === false ? fbData : data));
 
     useEffect(() => {
         if (supported === null) return;
@@ -110,25 +117,31 @@ function CoinDetail() {
                 )}
             </div>
 
-            {supported !== false ? (
-                <div className="mb-4 flex gap-2">
-                    {INTERVALS.map((iv) => (
-                        <button key={iv} onClick={() => setTimeframe(iv)}
-                            className={`rounded border px-3 py-1 text-sm transition ${timeframe === iv ? 'border-cyan/50 bg-cyan/20 text-cyan' : 'border-cyan/20 text-sub hover:text-cyan'}`}>
-                            {iv}
-                        </button>
-                    ))}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex gap-2">
+                    {supported !== false
+                        ? INTERVALS.map((iv) => (
+                            <button key={iv} onClick={() => setTimeframe(iv)}
+                                className={`rounded border px-3 py-1 text-sm transition ${timeframe === iv ? 'border-cyan/50 bg-cyan/20 text-cyan' : 'border-cyan/20 text-sub hover:text-cyan'}`}>
+                                {iv}
+                            </button>
+                        ))
+                        : meta?.id
+                            ? [[1, '1D'], [7, '7D'], [30, '1M'], [90, '3M'], [365, '1Y']].map(([d, label]) => (
+                                <button key={d} onClick={() => setFbDays(d)}
+                                    className={`rounded border px-3 py-1 text-sm transition ${fbDays === d ? 'border-cyan/50 bg-cyan/20 text-cyan' : 'border-cyan/20 text-sub hover:text-cyan'}`}>
+                                    {label}
+                                </button>
+                            ))
+                            : null}
                 </div>
-            ) : meta?.id ? (
-                <div className="mb-4 flex gap-2">
-                    {[[1, '1D'], [7, '7D'], [30, '1M']].map(([d, label]) => (
-                        <button key={d} onClick={() => setFbDays(d)}
-                            className={`rounded border px-3 py-1 text-sm transition ${fbDays === d ? 'border-cyan/50 bg-cyan/20 text-cyan' : 'border-cyan/20 text-sub hover:text-cyan'}`}>
-                            {label}
-                        </button>
-                    ))}
-                </div>
-            ) : null}
+                {canAnalyze && (
+                    <button onClick={runAnalysis}
+                        className="flex items-center gap-1.5 rounded border border-magenta/40 bg-magenta/10 px-3 py-1 text-sm text-magenta transition hover:bg-magenta/20 active:scale-95">
+                        ⚡ Analyze
+                    </button>
+                )}
+            </div>
 
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <div className="lg:col-span-2 self-start">
@@ -170,6 +183,7 @@ function CoinDetail() {
                     )}
                 </div>
             </div>
+            <AnalysisPanel analysis={analysis} rangeLabel={supported === false ? `${fbDays}D` : timeframe} />
         </div>
     );
 }

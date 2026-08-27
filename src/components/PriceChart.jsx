@@ -41,7 +41,11 @@ function PriceChart({ data, liveCandle }) {
 
   useEffect(() => {
     if (liveCandle && seriesRef.current) {
-      seriesRef.current.update(liveCandle);
+      try {
+        seriesRef.current.update(liveCandle);
+      } catch {
+        // interval değişiminde eski/daha eski zamanlı mum gelebilir; yut, çökme olmasın
+      }
     }
   }, [liveCandle]);
 
