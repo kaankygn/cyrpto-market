@@ -36,24 +36,31 @@ Respond as JSON with exactly:
   "keyPoints": ["short point", "short point", "short point"]
 }`;
 
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${key}`,
-      {
+    const callGemini = (model) =>
+      fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: { responseMimeType: 'application/json', temperature: 0.4 },
         }),
-      }
-    );
+      });
 
-    if (!r.ok) {
-      const t = await r.text();
-      return res.status(502).json({ error: 'LLM request failed', detail: t.slice(0, 400) });
+    // Model meşgulse (503/429/5xx) tekrar dene, olmazsa yedek modele geç
+    const models = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+    let data = null, lastErr = '';
+    for (let i = 0; i < 4 && !data; i++) {
+      const model = i < 3 ? models[0] : models[1];
+      const rr = await callGemini(model);
+      if (rr.ok) { data = await rr.json(); break; }
+      lastErr = await rr.text();
+      if (![429, 500, 502, 503].includes(rr.status)) break;
+      await new Promise((res2) => setTimeout(res2, 400 * (i + 1)));
     }
 
-    const data = await r.json();
+    if (!data) {
+      return res.status(502).json({ error: 'LLM request failed', detail: lastErr.slice(0, 400) });
+    }
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
     let parsed;
     try { parsed = JSON.parse(text); } catch { parsed = { analysis: text, outlook: '', keyPoints: [] }; }
