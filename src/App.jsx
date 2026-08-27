@@ -5,12 +5,14 @@ import Markets from './pages/Markets'
 import CoinDetail from './pages/CoinDetail'
 import Ticker from './components/Ticker'
 import ErrorBoundary from './components/ErrorBoundary'
+import CommandPalette from './components/CommandPalette'
 
 function App() {
   return (
     <div>
       <Navbar />
       <Ticker />
+      <CommandPalette />
       <ErrorBoundary>
         <Routes>
           <Route path="/" element={<Dashboard />} />
