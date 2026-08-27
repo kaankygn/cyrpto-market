@@ -35,6 +35,7 @@ function CoinDetail() {
     const [llm, setLlm] = useState(null);
     const [llmLoading, setLlmLoading] = useState(false);
     const [llmError, setLlmError] = useState(null);
+    const [mode, setMode] = useState('detailed');
     const [reloadKey, setReloadKey] = useState(0);
     const retry = () => setReloadKey((k) => k + 1);
 
@@ -78,7 +79,7 @@ function CoinDetail() {
             const res = await fetch(`${base}/api/analyze`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ symbol, rangeLabel: supported === false ? `${fbDays}D` : timeframe, indicators: a }),
+                body: JSON.stringify({ symbol, rangeLabel: supported === false ? `${fbDays}D` : timeframe, indicators: a, mode }),
             });
             const j = await res.json();
             if (!res.ok || j.error) throw new Error(j.error || 'failed');
@@ -160,10 +161,18 @@ function CoinDetail() {
                             : null}
                 </div>
                 {canAnalyze && (
-                    <button onClick={runAnalysis}
-                        className="flex items-center gap-1.5 rounded border border-magenta/40 bg-magenta/10 px-3 py-1 text-sm text-magenta transition hover:bg-magenta/20 active:scale-95">
-                        ⚡ Analyze
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex overflow-hidden rounded border border-cyan/20 text-xs">
+                            {['simple', 'detailed'].map((m) => (
+                                <button key={m} onClick={() => setMode(m)}
+                                    className={`px-2.5 py-1 capitalize ${mode === m ? 'bg-cyan/20 text-cyan' : 'text-sub hover:text-cyan'}`}>{m}</button>
+                            ))}
+                        </div>
+                        <button onClick={runAnalysis}
+                            className="flex items-center gap-1.5 rounded border border-magenta/40 bg-magenta/10 px-3 py-1 text-sm text-magenta transition hover:bg-magenta/20 active:scale-95">
+                            ⚡ Analyze
+                        </button>
+                    </div>
                 )}
             </div>
 

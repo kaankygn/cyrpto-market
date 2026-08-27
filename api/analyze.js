@@ -21,19 +21,26 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { symbol, rangeLabel, indicators } = req.body || {};
+    const { symbol, rangeLabel, indicators, mode, lang } = req.body || {};
     if (!indicators) return res.status(400).json({ error: 'Missing indicators' });
 
-    const prompt = `You are a concise crypto market analyst. You are given precomputed technical indicators for ${symbol || 'an asset'} over the ${rangeLabel || 'selected'} range. Explain what they show in plain English, grounded ONLY in these numbers — do not invent data. Then give a short, hedged near-term outlook. Neutral and factual. NOT financial advice.
+    const language = lang === 'tr' ? 'Turkish' : 'English';
+    const depth = mode === 'simple'
+      ? 'Be very brief and beginner-friendly: analysis = 1-2 short sentences, outlook = 1 short sentence, keyPoints = at most 2 short items.'
+      : 'analysis = 2-3 sentences, outlook = 1-2 sentences, keyPoints = 3 short items.';
+
+    const prompt = `You are a concise crypto market analyst. You are given precomputed technical indicators for ${symbol || 'an asset'} over the ${rangeLabel || 'selected'} range. Explain what they show, grounded ONLY in these numbers — do not invent data. Then give a short, hedged near-term outlook. Neutral and factual. NOT financial advice.
+
+Write the response in ${language}. ${depth}
 
 Indicators (JSON):
 ${JSON.stringify(indicators)}
 
 Respond as JSON with exactly:
 {
-  "analysis": "2-3 sentence explanation of what the indicators show",
-  "outlook": "1-2 sentence hedged near-term outlook",
-  "keyPoints": ["short point", "short point", "short point"]
+  "analysis": "...",
+  "outlook": "...",
+  "keyPoints": ["..."]
 }`;
 
     const callGemini = (model) =>
