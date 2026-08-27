@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import Logo from './Logo'
 import CoinSearch from './CoinSearch'
 
 function Navbar() {
-  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [glitch, setGlitch] = useState(false);
-  const [q, setQ] = useState('');
   const lastGlitch = useRef(0);
   const [online, setOnline] = useState(navigator.onLine);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -41,15 +39,6 @@ function Navbar() {
   const linkClass = ({ isActive }) =>
     `text-base uppercase tracking-wide ${isActive ? 'text-cyan glow-cyan' : 'text-sub hover:text-cyan'}`;
 
-  const submitSearch = (e) => {
-    e.preventDefault();
-    const s = q.trim().toUpperCase();
-    if (!s) return;
-    navigate(`/coin/${s.endsWith('USDT') ? s : s + 'USDT'}`);
-    setQ('');
-  };
-
-  
   return (
     <nav className={`nav-bar sticky top-0 z-50 flex h-28 items-center gap-6 overflow-visible border-b border-cyan/20 bg-panel px-5 md:gap-8 md:px-10 ${scrolled ? 'nav-scrolled' : ''} ${glitch ? 'nav-glitch' : ''}`}>
       <div className="nav-scanlines pointer-events-none absolute inset-0"></div>
